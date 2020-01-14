@@ -6,12 +6,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
@@ -40,19 +37,17 @@ public class AddBioActivity extends AppCompatActivity implements DatePickerDialo
     public static final String EXTRA_DOB = "com.example.abhishektask.EXTRA_DOB";
     public static final String EXTRA_SALARY = "com.example.abhishektask.EXTRA_SALARY";
     public static final String EXTRA_PHONE = "com.example.abhishektask.EXTRA_PHONE";
-    public static final String EXTRA_AGE = "com.example.abhishektask.EXTRA_AGE";
     public static final String EXTRA_PHOTO = "com.example.abhishektask.EXTRA_PHOTO";
 
     private EditText name, address, salary, phoneNo;
     private TextView dob;
     private Button setDate, addImage;
     private ImageView imageView;
-    private int age;
     private RadioGroup gender;
     private RadioButton radioButton;
-    Bitmap bitmap;
-    byte[] image;
-    boolean imageAdded;
+    private Bitmap bitmap;
+    private byte[] image;
+    private boolean imageAdded;
 
 
     @Override
@@ -72,6 +67,11 @@ public class AddBioActivity extends AppCompatActivity implements DatePickerDialo
 
         if (savedInstanceState != null) {
             dob.setText(savedInstanceState.getString("date"));
+            if (savedInstanceState.getByteArray("image")!= null) {
+                image=savedInstanceState.getByteArray("image");
+                Bitmap imageBitmap = DataConverter.convertByteArray2Image(image);
+                imageView.setImageBitmap(imageBitmap);
+            }
         }
 
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_close_black_24dp);
@@ -153,7 +153,11 @@ public class AddBioActivity extends AppCompatActivity implements DatePickerDialo
         String DOB = dob.getText().toString();
         String Salary = salary.getText().toString();
         String Phone = phoneNo.getText().toString();
-        if (Name.trim().isEmpty() || Address.trim().isEmpty() || DOB.trim().isEmpty() || Salary.trim().isEmpty() || Phone.trim().isEmpty()||!imageAdded) {
+        if (Phone.length()!=10){
+            phoneNo.setError("Number should be 10 digits");
+            return;
+        }
+        if (Name.trim().isEmpty() || Address.trim().isEmpty() || DOB.trim().isEmpty() || Salary.trim().isEmpty() || Phone.trim().isEmpty() || !imageAdded) {
             Toast.makeText(this, "Please insert the data in the empty field", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -166,7 +170,6 @@ public class AddBioActivity extends AppCompatActivity implements DatePickerDialo
         data.putExtra(EXTRA_DOB, DOB);
         data.putExtra(EXTRA_SALARY, Salary);
         data.putExtra(EXTRA_PHONE, Phone);
-        data.putExtra(EXTRA_AGE, age);
         data.putExtra(EXTRA_PHOTO, image);
         setResult(RESULT_OK, data);
         finish();
@@ -174,15 +177,14 @@ public class AddBioActivity extends AppCompatActivity implements DatePickerDialo
 
     @Override
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-        String date = dayOfMonth + "/" + month + "/" + year;
+        String date = dayOfMonth + "/" + (month+1) + "/" + year;
         dob.setText(date);
-        age = Calendar.getInstance().get(Calendar.YEAR) - year;
-
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("date", dob.getText().toString());
+        outState.putByteArray("image", image);
     }
 }
